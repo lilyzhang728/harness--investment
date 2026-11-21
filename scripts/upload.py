@@ -6,11 +6,12 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 import requests
 
-from config import JGY_BASE, JGY_DIR, JGY_PASS, JGY_USER
+from config import CN, JGY_BASE, JGY_DIR, JGY_PASS, JGY_USER
 
 TIMEOUT = 60
 
@@ -51,11 +52,17 @@ def put_file(local_path, *remote_parts):
     return url
 
 
+def remote_name(date_str, now=None):
+    """带时间戳的文件名：<date>_<HHMM>.epub，同一天重跑会多出一个新文件。"""
+    stamp = (now or datetime.now(CN)).strftime("%H%M")
+    return f"{date_str}_{stamp}.epub"
+
+
 def upload(epub_path, date_str):
-    """上传到 <JGY_DIR>/<YYYY-MM>/<date>.epub，并刷新一份 <JGY_DIR>/最新一期.epub。"""
+    """上传到 <JGY_DIR>/<YYYY-MM>/<date>_<HHMM>.epub，并刷新一份 <JGY_DIR>/最新一期.epub。"""
     month = date_str[:7]
     ensure_dir(JGY_DIR, month)
-    urls = [put_file(epub_path, JGY_DIR, month, f"{date_str}.epub")]
+    urls = [put_file(epub_path, JGY_DIR, month, remote_name(date_str))]
     try:
         ensure_dir(JGY_DIR)
         urls.append(put_file(epub_path, JGY_DIR, "最新一期.epub"))
