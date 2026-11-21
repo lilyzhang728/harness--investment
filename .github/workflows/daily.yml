@@ -2,8 +2,9 @@ name: daily-invest-note
 
 on:
   schedule:
-    # 00:30 UTC = 08:30 北京时间（美股已收盘、A股未开盘）
-    - cron: "30 0 * * *"
+    # 00:00 UTC = 08:00 北京时间（美股已收盘、A股未开盘）
+    # 整点是 GitHub 排队高峰，实际可能晚 5~30 分钟；想更准可改成 "5 0 * * *"
+    - cron: "0 0 * * *"
   workflow_dispatch:        # 支持手动补跑
 
 permissions:
