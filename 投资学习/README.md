@@ -6,7 +6,7 @@
 ## 怎么用这个档案
 
 1. **每个交易日早上读一期**（约 15 分钟）。追更方式是：把 `.epub` 放进汉王「网盘」/ 本机，用自带阅读器打开。
-2. **先读「今天只看这一张图」和「三句话总结」**，建立大局观。
+2. **先读「今天的行情快照」和「三句话总结」**，建立大局观。
 3. **术语词典不用背**，遇到不懂的词回来查一次，重复几次自然会。
 4. **每期末尾有「今日作业」**，动手做一次比读十遍有用。
 5. **每周日回看本周各期**：*我这周的操作，是因为判断对了，还是运气好？*
@@ -24,10 +24,11 @@
 ├── README.md                          ← 本文件（索引）
 ├── 2026-11-21_第01期_股债金同跌.md      ← 源文件（Markdown）
 ├── images/
-│   ├── 2026-11-21_market.png            ← 横排三栏图（Markdown / 网页用）
-│   └── 2026-11-21_market_portrait.png   ← 竖排三行图（EPUB 用，适配 7.1 寸）
-├── make_chart.py                      ← 行情快照图生成器（landscape / portrait）
-├── scripts/md2epub.py                  ← Markdown → EPUB3（墨水屏排版）
+│   ├── 2026-11-21_market.png             ← 横排三栏图（Markdown / 网页用）
+│   ├── 2026-11-21_market_portrait.png    ← 竖排主图（EPUB 用，3:4 整屏）
+│   └── 2026-11-21_market_portrait2.png   ← 周涨跌 + 回撤（有数据时才有）
+├── make_chart.py                      ← 旧版画图脚本（已由 scripts/chart.py 取代）
+├── scripts/md2epub.py                  ← 旧版 EPUB 脚本（已由 scripts/epub.py 取代）
 └── build/
     └── 2026-11-21_第01期.epub           ← 成品，传到设备上读
 ```
@@ -35,15 +36,14 @@
 ## 常用命令
 
 ```bash
-# 1) 生成行情图（横排 + 竖排）
-python3 make_chart.py            # 两张都要
-python3 make_chart.py portrait   # 只出 EPUB 用的竖排图
+# 全链路：抓数据 → 画图 → 写稿 → 转 EPUB（本地调试用占位稿、不上传）
+python3 scripts/run.py --stub --no-upload
 
-# 2) Markdown → EPUB
-python3 scripts/md2epub.py "2026-11-21_第01期_股债金同跌.md" "build/2026-11-21_第01期.epub"
+# 只重跑某一天（会调用 DeepSeek，需要 DEEPSEEK_API_KEY）
+python3 scripts/run.py --date 2026-11-21 --no-upload
 ```
 
-**图片约定**：EPUB 转换器会自动寻找 `xxx_portrait.png` 变体。只要在 `images/` 里放一份同名的竖排图，转换时就会优先用它，**Markdown 里不用改**。
+**图片约定**：EPUB 转换器会自动寻找 `xxx_portrait.png` 变体，优先用它；如果同一位置还有 `xxx_portrait2.png`，会紧跟着插入（一张图一屏），**Markdown 里不用改**。
 
 ## 排版规格（已针对 Clear7 锦鲤调过）
 
@@ -52,7 +52,7 @@ python3 scripts/md2epub.py "2026-11-21_第01期_股债金同跌.md" "build/2026-
 | 分章 | 每个 `## ` 拆成一章 | 墨水屏翻页快、目录可跳 |
 | 正文字号 | 1em（跟随系统） | 让你在设备上调，不写死 |
 | 表格 | 0.72em，允许折行 | 5 列表格在小屏上不溢出 |
-| 图片 | 竖版 1:1.35 | 与 7.1 寸屏幕比例一致，不会被压缩或截断 |
+| 图片 | 竖版 3:4（1264×1680） | 与 Clear7 锦鲤一屏等比，整屏显示不被裁切 |
 | 引用块 | 灰底 + 左边线 | 「教学点」「一句话记住」视觉上跳出来 |
 
 ## 待办清单

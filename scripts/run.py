@@ -100,8 +100,8 @@ def main():
 
     print("[2/6] 生成行情图 ...")
     prefix = f"{today_str}_market"
-    land, port = chart.render(snap, date_cn, IMG_DIR, prefix=prefix)
-    print(f"      {land.name} / {port.name}")
+    land, ports = chart.render(snap, date_cn, IMG_DIR, prefix=prefix)
+    print(f"      {land.name} / " + " / ".join(p.name for p in ports))
 
     ep, existing = next_episode(today_str)
     if existing and existing.name.endswith("_stub.md"):

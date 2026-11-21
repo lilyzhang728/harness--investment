@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-md2epub.py — 把《每日投资学习材料》的 Markdown 转成适合墨水屏（7.1 寸）阅读的 EPUB 3
+md2epub.py — 把《每日投资学习材料》的 Markdown 转成适合墨水屏（7.0 寸 / 1264×1680）阅读的 EPUB 3
 
 设计目标：
   1. 零外部依赖（只用到 python 的 markdown 包）
@@ -26,18 +26,20 @@ import markdown
 VOID_TAGS = ("img", "br", "hr", "meta", "link", "input", "col", "area", "base")
 
 # ---------------------------------------------------------------- 墨水屏样式
-# 7.1" / 300ppi / 4GB RAM：字号偏大、行距宽松、表格缩排、图片不超宽
+# 7.0" / 300ppi / 1264×1680：字号偏大、行距宽松、表格缩排、图片整屏
 CSS = """@charset "utf-8";
 
 html, body { margin: 0; padding: 0; }
 
 body {
-  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Source Han Serif CN",
+               "Songti SC", "STSong", "SimSun", "AR PL UMing CN", serif;
   font-size: 1em;
-  line-height: 1.68;
-  color: #111;
+  line-height: 1.75;
+  color: #1a1a1a;
   text-align: justify;
   word-wrap: break-word;
+  letter-spacing: 0.01em;
 }
 
 /* ---------- 封面 / 章节标题 ---------- */
@@ -79,17 +81,20 @@ body {
   margin-top: 2.5em;
 }
 
-h1 { font-size: 1.5em; line-height: 1.4; margin: 1.2em 0 0.5em; text-align: left; }
+h1 { font-size: 1.5em; line-height: 1.45; margin: 1.2em 0 0.5em; text-align: left;
+     letter-spacing: 0.03em; }
 h2 {
   font-size: 1.28em;
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 1.1em 0 0.7em;
   padding-left: 0.55em;
-  border-left: 5px solid #333;
+  border-left: 4px solid #444;
   text-align: left;
   page-break-after: avoid;
+  letter-spacing: 0.03em;
 }
-h3 { font-size: 1.1em; margin: 1.3em 0 0.45em; text-align: left; page-break-after: avoid; }
+h3 { font-size: 1.1em; margin: 1.3em 0 0.45em; text-align: left;
+     page-break-after: avoid; letter-spacing: 0.02em; }
 h4 { font-size: 1em; margin: 1.1em 0 0.4em; text-align: left; page-break-after: avoid; }
 
 p { margin: 0 0 0.75em 0; text-indent: 0; }
@@ -227,8 +232,13 @@ def escape(text):
 
 
 def embed_images(html, base_dir, img_dir):
-    """把 md 里引用的本地图片复制进 EPUB，并改写为相对路径。"""
-    found = set(re.findall(r'<img[^>]+src="([^"]+)"', html))
+    """把 md 里引用的本地图片复制进 EPUB，并改写为相对路径。
+
+    约定：若存在同名 _portrait 变体，优先用它（墨水屏竖屏排版）；
+    若还有 _portrait2 / _portrait3，说明竖版图被拆成了多屏，一并插在
+    同一位置 —— 阅读器里正好一屏一张，不会被裁切。
+    """
+    found = list(dict.fromkeys(re.findall(r'<img[^>]+src="([^"]+)"', html)))
     for src in found:
         if re.match(r"^[a-z]+://", src):
             continue
@@ -237,14 +247,24 @@ def embed_images(html, base_dir, img_dir):
             print(f"  ! 图片不存在，跳过：{src}")
             html = re.sub(r'<img[^>]*src="%s"[^>]*/>' % re.escape(src), "", html)
             continue
-        # 约定：若存在同名 _portrait 变体，优先用它（墨水屏竖屏排版）
         root, ext = os.path.splitext(path)
         cand = root + "_portrait" + ext
         if os.path.exists(cand):
-            path = cand
-        name = os.path.basename(path)
-        shutil.copy2(path, os.path.join(img_dir, name))
-        html = html.replace('src="%s"' % src, 'src="../images/%s"' % name)
+            paths = [cand]
+            for i in (2, 3, 4):
+                more = f"{root}_portrait{i}{ext}"
+                if os.path.exists(more):
+                    paths.append(more)
+        else:
+            paths = [path]
+        names = []
+        for p in paths:
+            name = os.path.basename(p)
+            shutil.copy2(p, os.path.join(img_dir, name))
+            names.append(name)
+        tags = "\n".join('<img src="../images/%s" alt=""/>' % n for n in names)
+        html = re.sub(r'<img[^>]*\bsrc="%s"[^>]*/>' % re.escape(src),
+                      lambda m: tags, html)
     return html
 
 

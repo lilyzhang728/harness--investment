@@ -17,7 +17,7 @@ GitHub Actions（cron 00:30 UTC = 08:30 CST）
   ├─ ② 抓快讯     新浪财经 7×24（关键词打分筛选）
   ├─ ③ 画图       matplotlib → 横版（网页用）+ 竖版（墨水屏用）
   ├─ ④ 写正文     DeepSeek API → Markdown（术语解释、教学点、建议）
-  ├─ ⑤ 转 EPUB    每个 `##` 拆一章，表格/图片按 7.1 寸屏适配
+  ├─ ⑤ 转 EPUB    每个 `##` 拆一章，竖版图一屏一张（3:4）
   ├─ ⑥ 投递       坚果云 WebDAV → 投资学习/YYYY-MM/*.epub
   └─ ⑦ 归档       提交回本仓库（Markdown + 图片 + 历史收盘价）
 ```
@@ -96,6 +96,8 @@ data/history.json               # 每日收盘价，用于算周涨跌（会持�
 
 **图片命名约定**：Markdown 里引用 `xxx_market.png`，如果同目录存在
 `xxx_market_portrait.png`，EPUB 转换时会**自动改用竖版**，正文不用改。
+竖版按 1264×1680（汉王 Clear7 锦鲤）1:1 出图，一个面板一屏；如果有
+`_portrait2.png`、`_portrait3.png`，会按顺序一起插进正文。
 
 ---
 
