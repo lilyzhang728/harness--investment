@@ -1,0 +1,59 @@
+name: daily-invest-note
+
+on:
+  schedule:
+    # 00:30 UTC = 08:30 北京时间（美股已收盘、A股未开盘）
+    - cron: "30 0 * * *"
+  workflow_dispatch:        # 支持手动补跑
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-invest-note
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装中文字体（图表用）
+        run: |
+          sudo apt-get update -qq || true
+          sudo apt-get install -y -qq fonts-wqy-zenhei || \
+            sudo apt-get install -y -qq fonts-noto-cjk || true
+          fc-list :lang=zh | head -5 || true
+
+      - name: 安装依赖
+        run: pip install -q -r requirements.txt
+
+      - name: 生成今日材料并投递
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL: ${{ vars.DEEPSEEK_MODEL || 'deepseek-chat' }}
+          JGY_USER: ${{ secrets.JGY_USER }}
+          JGY_PASS: ${{ secrets.JGY_PASS }}
+          JGY_DIR: ${{ vars.JGY_DIR || '投资学习' }}
+          MPLCONFIGDIR: ${{ runner.temp }}/mpl
+        run: python scripts/run.py
+
+      - name: 归档回仓库（Markdown + 图片 + 历史）
+        run: |
+          git config user.name  "note-bot"
+          git config user.email "note-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "没有变更，跳过提交"
+          else
+            git commit -m "note: $(date -u +%F) 每日学习材料"
+            git push
+          fi

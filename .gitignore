@@ -1,0 +1,8 @@
+.DS_Store
+.mplcache/
+__pycache__/
+*.pyc
+data/em_cache.json
+投资学习/build/
+投资学习/**/_epub/
+临时/
